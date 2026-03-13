@@ -1,7 +1,6 @@
 package io.github.kryen.chancemantrackersync;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Provides;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -42,13 +41,13 @@ public class ChancemanTrackerSyncPlugin extends Plugin
     private static final Pattern HUNTER_RUMOUR_KC_PATTERN =
         Pattern.compile("You have completed <col=[0-9a-f]{6}>([0-9,]+)</col> rumours? for the Hunter Guild\\.");
 
-    private final Gson gson = new GsonBuilder()
-        .disableHtmlEscaping()
-        .setPrettyPrinting()
-        .create();
-
     private final TrackerBlobExporter exporter = new TrackerBlobExporter();
-    private final AchievementDiaryCaptureStore achievementDiaryCaptureStore = new AchievementDiaryCaptureStore();
+
+    @Inject
+    private Gson gson;
+
+    private Gson prettyGson;
+    private AchievementDiaryCaptureStore achievementDiaryCaptureStore;
 
     @Inject
     private Client client;
@@ -71,6 +70,12 @@ public class ChancemanTrackerSyncPlugin extends Plugin
     @Override
     protected void startUp()
     {
+        prettyGson = gson.newBuilder()
+            .disableHtmlEscaping()
+            .setPrettyPrinting()
+            .create();
+        achievementDiaryCaptureStore = new AchievementDiaryCaptureStore(gson);
+
         panel = new ChancemanTrackerSyncPanel(this);
         BufferedImage icon = ImageUtil.loadImageResource(ChancemanTrackerSyncPlugin.class, "icon.png");
         navigationButton = NavigationButton.builder()
@@ -112,7 +117,7 @@ public class ChancemanTrackerSyncPlugin extends Plugin
     @Subscribe
     public void onWidgetLoaded(WidgetLoaded event)
     {
-        if (event.getGroupId() != InterfaceID.JOURNALSCROLL)
+        if (achievementDiaryCaptureStore == null || event.getGroupId() != InterfaceID.JOURNALSCROLL)
         {
             return;
         }
@@ -191,7 +196,7 @@ public class ChancemanTrackerSyncPlugin extends Plugin
                     config.hunterRumoursCompleted(),
                     diaryTaskStates
                 );
-                String json = gson.toJson(exportResult.blob);
+                String json = prettyGson.toJson(exportResult.blob);
                 copyToClipboard(json);
 
                 if (config.developerLogging())

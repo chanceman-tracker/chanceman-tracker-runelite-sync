@@ -25,8 +25,14 @@ final class AchievementDiaryCaptureStore
     private static final int MAX_SEGMENT_ROWS = 4;
     private static final double MIN_SEGMENT_SCORE = 0.45;
 
-    private final Gson gson = new Gson();
-    private final Map<String, Map<String, List<String>>> taskDefinitions = loadTaskDefinitions();
+    private final Gson gson;
+    private final Map<String, Map<String, List<String>>> taskDefinitions;
+
+    AchievementDiaryCaptureStore(Gson gson)
+    {
+        this.gson = gson;
+        this.taskDefinitions = loadTaskDefinitions();
+    }
 
     Map<String, Map<String, List<Boolean>>> loadStoredTaskStates(ConfigManager configManager)
     {
