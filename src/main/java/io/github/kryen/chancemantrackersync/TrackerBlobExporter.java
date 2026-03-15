@@ -21,7 +21,7 @@ final class TrackerBlobExporter
 {
     static final int SCHEMA_VERSION = 1;
 
-    ExportResult export(Client client, boolean developerLogging, int hunterRumoursCompleted, Map<String, Map<String, List<Boolean>>> achievementDiaryTaskStates)
+    ExportResult export(Client client, int hunterRumoursCompleted, Map<String, Map<String, List<Boolean>>> achievementDiaryTaskStates)
     {
         if (client.getGameState() != GameState.LOGGED_IN)
         {
@@ -40,11 +40,6 @@ final class TrackerBlobExporter
         blob.pluginVersion = ChancemanTrackerSyncPlugin.PLUGIN_VERSION;
         blob.source = "chanceman-tracker-sync";
         blob.player = buildPlayerBlob(client, localPlayer.getName(), hunterRumoursCompleted, achievementDiaryTaskStates);
-
-        if (developerLogging)
-        {
-            blob.debug = buildDebugBlob(client);
-        }
 
         return new ExportResult(blob, buildSummary(blob));
     }
@@ -255,56 +250,55 @@ final class TrackerBlobExporter
         return training;
     }
 
-    private DebugBlob buildDebugBlob(Client client)
+    Map<String, Integer> buildDebugNamedVars(Client client)
     {
-        DebugBlob debug = new DebugBlob();
-        debug.namedVars = new LinkedHashMap<>();
-        debug.namedVars.put("ACCOUNT_TYPE", client.getVarbitValue(Varbits.ACCOUNT_TYPE));
-        debug.namedVars.put("SUPERIOR_ENABLED", client.getVarbitValue(Varbits.SUPERIOR_ENABLED));
-        debug.namedVars.put("SLAYER_POINTS", client.getVarbitValue(Varbits.SLAYER_POINTS));
-        debug.namedVars.put("SLAYER_TASK_STREAK", client.getVarbitValue(Varbits.SLAYER_TASK_STREAK));
-        debug.namedVars.put("SLAYER_TASK_BOSS", client.getVarbitValue(Varbits.SLAYER_TASK_BOSS));
-        debug.namedVars.put("COMBAT_TASK_EASY", client.getVarbitValue(Varbits.COMBAT_TASK_EASY));
-        debug.namedVars.put("COMBAT_TASK_MEDIUM", client.getVarbitValue(Varbits.COMBAT_TASK_MEDIUM));
-        debug.namedVars.put("COMBAT_TASK_HARD", client.getVarbitValue(Varbits.COMBAT_TASK_HARD));
-        debug.namedVars.put("COMBAT_TASK_ELITE", client.getVarbitValue(Varbits.COMBAT_TASK_ELITE));
-        debug.namedVars.put("COMBAT_TASK_MASTER", client.getVarbitValue(Varbits.COMBAT_TASK_MASTER));
-        debug.namedVars.put("COMBAT_TASK_GRANDMASTER", client.getVarbitValue(Varbits.COMBAT_TASK_GRANDMASTER));
-        debug.namedVars.put("SLAYER_UNLOCK_SUPERIORMOBS", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_SUPERIORMOBS));
-        debug.namedVars.put("SLAYER_TOGGLEOFF_SUPERIORMOBS", client.getVarbitValue(VarbitID.SLAYER_TOGGLEOFF_SUPERIORMOBS));
-        debug.namedVars.put("SLAYER_UNLOCK_BOSSES", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_BOSSES));
-        debug.namedVars.put("SLAYER_UNLOCK_AVIANSIES", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_AVIANSIES));
-        debug.namedVars.put("SLAYER_UNLOCK_BASILISK", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_BASILISK));
-        debug.namedVars.put("SLAYER_UNLOCK_FOSSILWYVERNBLOCK", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_FOSSILWYVERNBLOCK));
-        debug.namedVars.put("SLAYER_UNLOCK_GROTESQUEKILLS", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_GROTESQUEKILLS));
-        debug.namedVars.put("SLAYER_UNLOCK_LIZARDMEN", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_LIZARDMEN));
-        debug.namedVars.put("SLAYER_UNLOCK_MITHRILDRAGONS", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_MITHRILDRAGONS));
-        debug.namedVars.put("SLAYER_UNLOCK_STORAGE", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_STORAGE));
-        debug.namedVars.put("SLAYER_UNLOCK_TZHAAR", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_TZHAAR));
-        debug.namedVars.put("SLAYER_UNLOCK_VAMPYRES", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_VAMPYRES));
-        debug.namedVars.put("SLAYER_UNLOCK_WARPED_CREATURES", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_WARPED_CREATURES));
-        debug.namedVars.put("SLAYER_UNLOCK_WILDY_EXTRATASKS", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_WILDY_EXTRATASKS));
-        debug.namedVars.put("SLAYER_UNLOCK_1", client.getVarpValue(VarPlayer.SLAYER_UNLOCK_1));
-        debug.namedVars.put("SLAYER_UNLOCK_2", client.getVarpValue(VarPlayer.SLAYER_UNLOCK_2));
-        debug.namedVars.put("BRUT_FISHING_S", client.getVarbitValue(VarbitID.BRUT_FISHING_S));
-        debug.namedVars.put("BRUT_FISHING_R", client.getVarbitValue(VarbitID.BRUT_FISHING_R));
-        debug.namedVars.put("BRUT_FIRE", client.getVarbitValue(VarbitID.BRUT_FIRE));
-        debug.namedVars.put("BRUT_TRACKER", client.getVarbitValue(VarbitID.BRUT_TRACKER));
-        debug.namedVars.put("BRUT_HERB_POTION", client.getVarbitValue(VarbitID.BRUT_HERB_POTION));
-        debug.namedVars.put("BRUT_SMITH_SPEAR", client.getVarbitValue(VarbitID.BRUT_SMITH_SPEAR));
-        debug.namedVars.put("BRUT_SMITH_HASTA", client.getVarbitValue(VarbitID.BRUT_SMITH_HASTA));
-        debug.namedVars.put("BRUT_CRAFT_SHIP", client.getVarbitValue(VarbitID.BRUT_CRAFT_SHIP));
-        debug.namedVars.put("BRUT_TRIED_POOL", client.getVarbitValue(VarbitID.BRUT_TRIED_POOL));
-        debug.namedVars.put("BRUT_TRIED_DOOR", client.getVarbitValue(VarbitID.BRUT_TRIED_DOOR));
-        debug.namedVars.put("BRUT_PRAYER_TOTAL", client.getVarbitValue(VarbitID.BRUT_PRAYER_TOTAL));
-        debug.namedVars.put("BRUT_ALL_CERT_DONE", client.getVarbitValue(VarbitID.BRUT_ALL_CERT_DONE));
-        debug.namedVars.put("BRUT_FARMING_PLANTING", client.getVarbitValue(VarbitID.BRUT_FARMING_PLANTING));
-        debug.namedVars.put("BRUT_FARMING_SMASHING", client.getVarbitValue(VarbitID.BRUT_FARMING_SMASHING));
-        debug.namedVars.put("BRUT_MINIQUEST", client.getVarbitValue(VarbitID.BRUT_MINIQUEST));
-        debug.namedVars.put("BRUT_SMASH_POTS_AUTOMATICALLY", client.getVarbitValue(VarbitID.BRUT_SMASH_POTS_AUTOMATICALLY));
-        debug.namedVars.put("BRUT_DIBBER_FAILED_ATTEMPTS", client.getVarbitValue(VarbitID.BRUT_DIBBER_FAILED_ATTEMPTS));
-        debug.namedVars.put("QUEST_POINTS", client.getVarpValue(VarPlayer.QUEST_POINTS));
-        return debug;
+        Map<String, Integer> namedVars = new LinkedHashMap<>();
+        namedVars.put("ACCOUNT_TYPE", client.getVarbitValue(Varbits.ACCOUNT_TYPE));
+        namedVars.put("SUPERIOR_ENABLED", client.getVarbitValue(Varbits.SUPERIOR_ENABLED));
+        namedVars.put("SLAYER_POINTS", client.getVarbitValue(Varbits.SLAYER_POINTS));
+        namedVars.put("SLAYER_TASK_STREAK", client.getVarbitValue(Varbits.SLAYER_TASK_STREAK));
+        namedVars.put("SLAYER_TASK_BOSS", client.getVarbitValue(Varbits.SLAYER_TASK_BOSS));
+        namedVars.put("COMBAT_TASK_EASY", client.getVarbitValue(Varbits.COMBAT_TASK_EASY));
+        namedVars.put("COMBAT_TASK_MEDIUM", client.getVarbitValue(Varbits.COMBAT_TASK_MEDIUM));
+        namedVars.put("COMBAT_TASK_HARD", client.getVarbitValue(Varbits.COMBAT_TASK_HARD));
+        namedVars.put("COMBAT_TASK_ELITE", client.getVarbitValue(Varbits.COMBAT_TASK_ELITE));
+        namedVars.put("COMBAT_TASK_MASTER", client.getVarbitValue(Varbits.COMBAT_TASK_MASTER));
+        namedVars.put("COMBAT_TASK_GRANDMASTER", client.getVarbitValue(Varbits.COMBAT_TASK_GRANDMASTER));
+        namedVars.put("SLAYER_UNLOCK_SUPERIORMOBS", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_SUPERIORMOBS));
+        namedVars.put("SLAYER_TOGGLEOFF_SUPERIORMOBS", client.getVarbitValue(VarbitID.SLAYER_TOGGLEOFF_SUPERIORMOBS));
+        namedVars.put("SLAYER_UNLOCK_BOSSES", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_BOSSES));
+        namedVars.put("SLAYER_UNLOCK_AVIANSIES", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_AVIANSIES));
+        namedVars.put("SLAYER_UNLOCK_BASILISK", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_BASILISK));
+        namedVars.put("SLAYER_UNLOCK_FOSSILWYVERNBLOCK", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_FOSSILWYVERNBLOCK));
+        namedVars.put("SLAYER_UNLOCK_GROTESQUEKILLS", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_GROTESQUEKILLS));
+        namedVars.put("SLAYER_UNLOCK_LIZARDMEN", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_LIZARDMEN));
+        namedVars.put("SLAYER_UNLOCK_MITHRILDRAGONS", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_MITHRILDRAGONS));
+        namedVars.put("SLAYER_UNLOCK_STORAGE", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_STORAGE));
+        namedVars.put("SLAYER_UNLOCK_TZHAAR", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_TZHAAR));
+        namedVars.put("SLAYER_UNLOCK_VAMPYRES", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_VAMPYRES));
+        namedVars.put("SLAYER_UNLOCK_WARPED_CREATURES", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_WARPED_CREATURES));
+        namedVars.put("SLAYER_UNLOCK_WILDY_EXTRATASKS", client.getVarbitValue(VarbitID.SLAYER_UNLOCK_WILDY_EXTRATASKS));
+        namedVars.put("SLAYER_UNLOCK_1", client.getVarpValue(VarPlayer.SLAYER_UNLOCK_1));
+        namedVars.put("SLAYER_UNLOCK_2", client.getVarpValue(VarPlayer.SLAYER_UNLOCK_2));
+        namedVars.put("BRUT_FISHING_S", client.getVarbitValue(VarbitID.BRUT_FISHING_S));
+        namedVars.put("BRUT_FISHING_R", client.getVarbitValue(VarbitID.BRUT_FISHING_R));
+        namedVars.put("BRUT_FIRE", client.getVarbitValue(VarbitID.BRUT_FIRE));
+        namedVars.put("BRUT_TRACKER", client.getVarbitValue(VarbitID.BRUT_TRACKER));
+        namedVars.put("BRUT_HERB_POTION", client.getVarbitValue(VarbitID.BRUT_HERB_POTION));
+        namedVars.put("BRUT_SMITH_SPEAR", client.getVarbitValue(VarbitID.BRUT_SMITH_SPEAR));
+        namedVars.put("BRUT_SMITH_HASTA", client.getVarbitValue(VarbitID.BRUT_SMITH_HASTA));
+        namedVars.put("BRUT_CRAFT_SHIP", client.getVarbitValue(VarbitID.BRUT_CRAFT_SHIP));
+        namedVars.put("BRUT_TRIED_POOL", client.getVarbitValue(VarbitID.BRUT_TRIED_POOL));
+        namedVars.put("BRUT_TRIED_DOOR", client.getVarbitValue(VarbitID.BRUT_TRIED_DOOR));
+        namedVars.put("BRUT_PRAYER_TOTAL", client.getVarbitValue(VarbitID.BRUT_PRAYER_TOTAL));
+        namedVars.put("BRUT_ALL_CERT_DONE", client.getVarbitValue(VarbitID.BRUT_ALL_CERT_DONE));
+        namedVars.put("BRUT_FARMING_PLANTING", client.getVarbitValue(VarbitID.BRUT_FARMING_PLANTING));
+        namedVars.put("BRUT_FARMING_SMASHING", client.getVarbitValue(VarbitID.BRUT_FARMING_SMASHING));
+        namedVars.put("BRUT_MINIQUEST", client.getVarbitValue(VarbitID.BRUT_MINIQUEST));
+        namedVars.put("BRUT_SMASH_POTS_AUTOMATICALLY", client.getVarbitValue(VarbitID.BRUT_SMASH_POTS_AUTOMATICALLY));
+        namedVars.put("BRUT_DIBBER_FAILED_ATTEMPTS", client.getVarbitValue(VarbitID.BRUT_DIBBER_FAILED_ATTEMPTS));
+        namedVars.put("QUEST_POINTS", client.getVarpValue(VarPlayer.QUEST_POINTS));
+        return namedVars;
     }
 
     private String normalizeAccountType(AccountType accountType)
@@ -366,7 +360,6 @@ final class TrackerBlobExporter
         String pluginVersion;
         String source;
         PlayerBlob player;
-        DebugBlob debug;
     }
 
     static final class PlayerBlob
@@ -430,8 +423,4 @@ final class TrackerBlobExporter
         Map<String, Integer> namedVars;
     }
 
-    static final class DebugBlob
-    {
-        Map<String, Integer> namedVars;
-    }
 }

@@ -1,5 +1,6 @@
 package io.github.kryen.chancemantrackersync;
 
+import java.util.Arrays;
 import net.runelite.api.QuestState;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,5 +14,12 @@ public class TrackerBlobExporterTest
         Assert.assertEquals(1, TrackerBlobExporter.toQuestStatus(QuestState.IN_PROGRESS));
         Assert.assertEquals(2, TrackerBlobExporter.toQuestStatus(QuestState.FINISHED));
         Assert.assertEquals(0, TrackerBlobExporter.toQuestStatus(null));
+    }
+
+    @Test
+    public void trackerBlobDoesNotExposeDebugPayload()
+    {
+        Assert.assertFalse(Arrays.stream(TrackerBlobExporter.TrackerBlob.class.getDeclaredFields())
+            .anyMatch(field -> field.getName().equals("debug")));
     }
 }

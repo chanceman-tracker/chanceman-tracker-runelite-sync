@@ -141,7 +141,7 @@ public class ChancemanTrackerSyncPlugin extends Plugin
         List<AchievementDiaryCaptureStore.Capture> captures = achievementDiaryCaptureStore.parseCaptures(children);
         if (captures.isEmpty())
         {
-            if (config.developerLogging() && !journalTitleText.isEmpty())
+            if (log.isDebugEnabled() && !journalTitleText.isEmpty())
             {
                 List<String> previewRows = new ArrayList<>();
                 for (int index = 1; index < children.length && previewRows.size() < 25; index++)
@@ -192,16 +192,16 @@ public class ChancemanTrackerSyncPlugin extends Plugin
                     achievementDiaryCaptureStore.loadStoredTaskStates(configManager);
                 TrackerBlobExporter.ExportResult exportResult = exporter.export(
                     client,
-                    config.developerLogging(),
                     config.hunterRumoursCompleted(),
                     diaryTaskStates
                 );
                 String json = prettyGson.toJson(exportResult.blob);
                 copyToClipboard(json);
 
-                if (config.developerLogging())
+                if (log.isDebugEnabled())
                 {
                     log.debug("Tracker blob:{}{}", System.lineSeparator(), json);
+                    log.debug("Named var snapshot:{}{}", System.lineSeparator(), prettyGson.toJson(exporter.buildDebugNamedVars(client)));
                 }
 
                 SwingUtilities.invokeLater(() ->
