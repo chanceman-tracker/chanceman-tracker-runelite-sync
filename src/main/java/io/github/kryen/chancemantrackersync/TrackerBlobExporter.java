@@ -2,7 +2,6 @@ package io.github.kryen.chancemantrackersync;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,19 @@ final class TrackerBlobExporter
 {
     static final int SCHEMA_VERSION = 1;
 
-    ExportResult export(Client client, int hunterRumoursCompleted, Map<String, Map<String, List<Boolean>>> achievementDiaryTaskStates)
+    private final AchievementDiaryVarResolver achievementDiaryVarResolver;
+
+    TrackerBlobExporter()
+    {
+        this(new AchievementDiaryVarResolver());
+    }
+
+    TrackerBlobExporter(AchievementDiaryVarResolver achievementDiaryVarResolver)
+    {
+        this.achievementDiaryVarResolver = achievementDiaryVarResolver;
+    }
+
+    ExportResult export(Client client, int hunterRumoursCompleted)
     {
         if (client.getGameState() != GameState.LOGGED_IN)
         {
@@ -39,7 +50,7 @@ final class TrackerBlobExporter
         blob.generatedAt = Instant.now().toString();
         blob.pluginVersion = ChancemanTrackerSyncPlugin.PLUGIN_VERSION;
         blob.source = "chanceman-tracker-sync";
-        blob.player = buildPlayerBlob(client, localPlayer.getName(), hunterRumoursCompleted, achievementDiaryTaskStates);
+        blob.player = buildPlayerBlob(client, localPlayer.getName(), hunterRumoursCompleted);
 
         return new ExportResult(blob, buildSummary(blob));
     }
@@ -63,7 +74,7 @@ final class TrackerBlobExporter
         }
     }
 
-    private PlayerBlob buildPlayerBlob(Client client, String playerName, int hunterRumoursCompleted, Map<String, Map<String, List<Boolean>>> achievementDiaryTaskStates)
+    private PlayerBlob buildPlayerBlob(Client client, String playerName, int hunterRumoursCompleted)
     {
         PlayerBlob player = new PlayerBlob();
         player.name = playerName;
@@ -71,7 +82,7 @@ final class TrackerBlobExporter
         player.levels = collectLevels(client);
         player.quests = collectQuests(client);
         player.questPoints = client.getVarpValue(VarPlayer.QUEST_POINTS);
-        player.achievementDiaries = collectAchievementDiaries(client, achievementDiaryTaskStates);
+        player.achievementDiaries = achievementDiaryVarResolver.resolve(client);
         player.combatAchievements = collectCombatAchievements(client);
         player.slayer = collectSlayer(client);
         player.barbarianTraining = collectBarbarianTraining(client);
@@ -101,51 +112,6 @@ final class TrackerBlobExporter
             quests.put(quest.getName(), toQuestStatus(quest.getState(client)));
         }
         return quests;
-    }
-
-    private Map<String, Map<String, AchievementDiaryTierBlob>> collectAchievementDiaries(Client client, Map<String, Map<String, List<Boolean>>> achievementDiaryTaskStates)
-    {
-        Map<String, Map<String, AchievementDiaryTierBlob>> diaries = new LinkedHashMap<>();
-        diaries.put("Ardougne", buildDiaryRegion(client, Varbits.DIARY_ARDOUGNE_EASY, Varbits.DIARY_ARDOUGNE_MEDIUM, Varbits.DIARY_ARDOUGNE_HARD, Varbits.DIARY_ARDOUGNE_ELITE, achievementDiaryTaskStates.get("Ardougne")));
-        diaries.put("Desert", buildDiaryRegion(client, Varbits.DIARY_DESERT_EASY, Varbits.DIARY_DESERT_MEDIUM, Varbits.DIARY_DESERT_HARD, Varbits.DIARY_DESERT_ELITE, achievementDiaryTaskStates.get("Desert")));
-        diaries.put("Falador", buildDiaryRegion(client, Varbits.DIARY_FALADOR_EASY, Varbits.DIARY_FALADOR_MEDIUM, Varbits.DIARY_FALADOR_HARD, Varbits.DIARY_FALADOR_ELITE, achievementDiaryTaskStates.get("Falador")));
-        diaries.put("Fremennik", buildDiaryRegion(client, Varbits.DIARY_FREMENNIK_EASY, Varbits.DIARY_FREMENNIK_MEDIUM, Varbits.DIARY_FREMENNIK_HARD, Varbits.DIARY_FREMENNIK_ELITE, achievementDiaryTaskStates.get("Fremennik")));
-        diaries.put("Kandarin", buildDiaryRegion(client, Varbits.DIARY_KANDARIN_EASY, Varbits.DIARY_KANDARIN_MEDIUM, Varbits.DIARY_KANDARIN_HARD, Varbits.DIARY_KANDARIN_ELITE, achievementDiaryTaskStates.get("Kandarin")));
-        diaries.put("Karamja", buildDiaryRegion(client, Varbits.DIARY_KARAMJA_EASY, Varbits.DIARY_KARAMJA_MEDIUM, Varbits.DIARY_KARAMJA_HARD, Varbits.DIARY_KARAMJA_ELITE, achievementDiaryTaskStates.get("Karamja")));
-        diaries.put("Kourend & Kebos", buildDiaryRegion(client, Varbits.DIARY_KOUREND_EASY, Varbits.DIARY_KOUREND_MEDIUM, Varbits.DIARY_KOUREND_HARD, Varbits.DIARY_KOUREND_ELITE, achievementDiaryTaskStates.get("Kourend & Kebos")));
-        diaries.put("Lumbridge & Draynor", buildDiaryRegion(client, Varbits.DIARY_LUMBRIDGE_EASY, Varbits.DIARY_LUMBRIDGE_MEDIUM, Varbits.DIARY_LUMBRIDGE_HARD, Varbits.DIARY_LUMBRIDGE_ELITE, achievementDiaryTaskStates.get("Lumbridge & Draynor")));
-        diaries.put("Morytania", buildDiaryRegion(client, Varbits.DIARY_MORYTANIA_EASY, Varbits.DIARY_MORYTANIA_MEDIUM, Varbits.DIARY_MORYTANIA_HARD, Varbits.DIARY_MORYTANIA_ELITE, achievementDiaryTaskStates.get("Morytania")));
-        diaries.put("Varrock", buildDiaryRegion(client, Varbits.DIARY_VARROCK_EASY, Varbits.DIARY_VARROCK_MEDIUM, Varbits.DIARY_VARROCK_HARD, Varbits.DIARY_VARROCK_ELITE, achievementDiaryTaskStates.get("Varrock")));
-        diaries.put("Western Provinces", buildDiaryRegion(client, Varbits.DIARY_WESTERN_EASY, Varbits.DIARY_WESTERN_MEDIUM, Varbits.DIARY_WESTERN_HARD, Varbits.DIARY_WESTERN_ELITE, achievementDiaryTaskStates.get("Western Provinces")));
-        diaries.put("Wilderness", buildDiaryRegion(client, Varbits.DIARY_WILDERNESS_EASY, Varbits.DIARY_WILDERNESS_MEDIUM, Varbits.DIARY_WILDERNESS_HARD, Varbits.DIARY_WILDERNESS_ELITE, achievementDiaryTaskStates.get("Wilderness")));
-        return diaries;
-    }
-
-    private Map<String, AchievementDiaryTierBlob> buildDiaryRegion(Client client, int easyVarbit, int mediumVarbit, int hardVarbit, int eliteVarbit, Map<String, List<Boolean>> capturedTaskStates)
-    {
-        Map<String, AchievementDiaryTierBlob> region = new LinkedHashMap<>();
-        region.put("Easy", buildDiaryTier(client, easyVarbit, capturedTaskStates != null ? capturedTaskStates.get("Easy") : null));
-        region.put("Medium", buildDiaryTier(client, mediumVarbit, capturedTaskStates != null ? capturedTaskStates.get("Medium") : null));
-        region.put("Hard", buildDiaryTier(client, hardVarbit, capturedTaskStates != null ? capturedTaskStates.get("Hard") : null));
-        region.put("Elite", buildDiaryTier(client, eliteVarbit, capturedTaskStates != null ? capturedTaskStates.get("Elite") : null));
-        return region;
-    }
-
-    private AchievementDiaryTierBlob buildDiaryTier(Client client, int varbit, List<Boolean> capturedTaskStates)
-    {
-        AchievementDiaryTierBlob tier = new AchievementDiaryTierBlob();
-        if (capturedTaskStates != null)
-        {
-            tier.taskStatesAvailable = true;
-            tier.tasks = new ArrayList<>(capturedTaskStates);
-            tier.complete = capturedTaskStates.stream().allMatch(Boolean::booleanValue);
-            return tier;
-        }
-
-        tier.complete = client.getVarbitValue(varbit) > 0;
-        tier.taskStatesAvailable = false;
-        tier.tasks = Collections.emptyList();
-        return tier;
     }
 
     private CombatAchievementsBlob collectCombatAchievements(Client client)

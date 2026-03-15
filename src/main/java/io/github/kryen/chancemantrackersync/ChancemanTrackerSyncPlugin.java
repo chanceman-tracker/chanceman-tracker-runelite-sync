@@ -5,9 +5,6 @@ import com.google.inject.Provides;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
@@ -15,9 +12,6 @@ import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.events.ChatMessage;
-import net.runelite.api.events.WidgetLoaded;
-import net.runelite.api.gameval.InterfaceID;
-import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -26,7 +20,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
-import net.runelite.client.util.Text;
 
 @Slf4j
 @PluginDescriptor(
@@ -47,7 +40,6 @@ public class ChancemanTrackerSyncPlugin extends Plugin
     private Gson gson;
 
     private Gson prettyGson;
-    private AchievementDiaryCaptureStore achievementDiaryCaptureStore;
 
     @Inject
     private Client client;
@@ -74,7 +66,6 @@ public class ChancemanTrackerSyncPlugin extends Plugin
             .disableHtmlEscaping()
             .setPrettyPrinting()
             .create();
-        achievementDiaryCaptureStore = new AchievementDiaryCaptureStore(gson);
 
         panel = new ChancemanTrackerSyncPanel(this);
         BufferedImage icon = ImageUtil.loadImageResource(ChancemanTrackerSyncPlugin.class, "icon.png");
@@ -114,69 +105,6 @@ public class ChancemanTrackerSyncPlugin extends Plugin
         log.debug("Captured Hunter Rumours count: {}", kc);
     }
 
-    @Subscribe
-    public void onWidgetLoaded(WidgetLoaded event)
-    {
-        if (achievementDiaryCaptureStore == null || event.getGroupId() != InterfaceID.JOURNALSCROLL)
-        {
-            return;
-        }
-
-        Widget textLayer = client.getWidget(InterfaceID.Journalscroll.TEXTLAYER);
-        if (textLayer == null)
-        {
-            return;
-        }
-
-        Widget[] children = textLayer.getStaticChildren();
-        if (children == null || children.length == 0)
-        {
-            return;
-        }
-
-        Widget screenTitle = client.getWidget(InterfaceID.Journalscroll.TITLE);
-        String screenTitleText = screenTitle != null ? Text.removeTags(screenTitle.getText()) : "";
-        String journalTitleText = children[0] != null ? Text.removeTags(children[0].getText()) : "";
-
-        List<AchievementDiaryCaptureStore.Capture> captures = achievementDiaryCaptureStore.parseCaptures(children);
-        if (captures.isEmpty())
-        {
-            if (log.isDebugEnabled() && !journalTitleText.isEmpty())
-            {
-                List<String> previewRows = new ArrayList<>();
-                for (int index = 1; index < children.length && previewRows.size() < 25; index++)
-                {
-                    Widget child = children[index];
-                    if (child == null)
-                    {
-                        continue;
-                    }
-
-                    String rawText = child.getText();
-                    String plainText = Text.removeTags(rawText == null ? "" : rawText).trim();
-                    if (plainText.isEmpty())
-                    {
-                        continue;
-                    }
-
-                    previewRows.add((rawText != null && rawText.contains("<str>") ? "[x] " : "[ ] ") + plainText);
-                }
-
-                log.debug("No diary capture match for journal scroll. screenTitle='{}', journalTitle='{}', rows={}, previewRows={}",
-                    screenTitleText, journalTitleText, children.length, previewRows);
-            }
-            return;
-        }
-
-        achievementDiaryCaptureStore.storeCaptures(configManager, captures);
-        log.debug("Captured achievement diary task states for {}. screenTitle='{}', journalTitle='{}'",
-            captures.stream()
-                .map(capture -> capture.getDiaryName() + " " + capture.getTierName() + " (" + capture.getCapturedTaskCount() + ")")
-                .collect(java.util.stream.Collectors.joining(", ")),
-            screenTitleText,
-            journalTitleText);
-    }
-
     void copyTrackerBlob()
     {
         if (panel != null)
@@ -188,12 +116,9 @@ public class ChancemanTrackerSyncPlugin extends Plugin
         {
             try
             {
-                Map<String, Map<String, java.util.List<Boolean>>> diaryTaskStates =
-                    achievementDiaryCaptureStore.loadStoredTaskStates(configManager);
                 TrackerBlobExporter.ExportResult exportResult = exporter.export(
                     client,
-                    config.hunterRumoursCompleted(),
-                    diaryTaskStates
+                    config.hunterRumoursCompleted()
                 );
                 String json = prettyGson.toJson(exportResult.blob);
                 copyToClipboard(json);

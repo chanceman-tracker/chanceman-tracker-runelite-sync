@@ -14,7 +14,7 @@ The current blob includes:
 - quest states
 - quest points
 - achievement diary tier completion
-- achievement diary per-step completion, when captured from the in-game diary pages
+- achievement diary per-step completion
 - combat achievement task counts and tier completion
 - slayer points and task streak
 - slayer unlocks such as `Bigger and Badder` and `Like a Boss`
@@ -33,7 +33,6 @@ The current blob includes:
 
 - The plugin stores data locally and survives RuneLite restarts.
 - Hunter rumours are only updated after RuneLite sees the in-game chat message that reports your total rumours completed.
-- Exact achievement diary step completion is updated after you open and scroll through those diary pages in-game. Once captured, that data is stored locally and reused on later exports.
 
 ## Development
 
@@ -46,7 +45,6 @@ Useful tools while developing:
 
 - RuneLite developer mode
 - Var Inspector
-- the in-game achievement diary pages for step capture validation
 
 ## License
 
