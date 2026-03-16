@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.Player;
@@ -22,11 +23,7 @@ final class TrackerBlobExporter
 
     private final AchievementDiaryVarResolver achievementDiaryVarResolver;
 
-    TrackerBlobExporter()
-    {
-        this(new AchievementDiaryVarResolver());
-    }
-
+    @Inject
     TrackerBlobExporter(AchievementDiaryVarResolver achievementDiaryVarResolver)
     {
         this.achievementDiaryVarResolver = achievementDiaryVarResolver;

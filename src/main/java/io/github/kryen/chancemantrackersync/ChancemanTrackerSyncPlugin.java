@@ -34,10 +34,11 @@ public class ChancemanTrackerSyncPlugin extends Plugin
     private static final Pattern HUNTER_RUMOUR_KC_PATTERN =
         Pattern.compile("You have completed <col=[0-9a-f]{6}>([0-9,]+)</col> rumours? for the Hunter Guild\\.");
 
-    private final TrackerBlobExporter exporter = new TrackerBlobExporter();
-
     @Inject
     private Gson gson;
+
+    @Inject
+    private TrackerBlobExporter exporter;
 
     private Gson prettyGson;
 

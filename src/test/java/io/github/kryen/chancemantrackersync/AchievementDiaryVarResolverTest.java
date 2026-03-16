@@ -1,5 +1,6 @@
 package io.github.kryen.chancemantrackersync;
 
+import com.google.gson.Gson;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -10,7 +11,7 @@ import org.junit.Test;
 
 public class AchievementDiaryVarResolverTest
 {
-    private final AchievementDiaryVarResolver resolver = new AchievementDiaryVarResolver();
+    private final AchievementDiaryVarResolver resolver = new AchievementDiaryVarResolver(new Gson());
 
     @Test
     public void resolvesAllDiariesWithTaskListsAvailable()

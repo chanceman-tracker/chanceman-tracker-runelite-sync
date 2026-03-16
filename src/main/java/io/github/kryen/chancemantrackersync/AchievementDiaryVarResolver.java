@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 import net.runelite.api.Client;
 
 final class AchievementDiaryVarResolver
@@ -35,11 +36,7 @@ final class AchievementDiaryVarResolver
 
     private final Map<String, Map<String, TierSpec>> specs;
 
-    AchievementDiaryVarResolver()
-    {
-        this(new Gson());
-    }
-
+    @Inject
     AchievementDiaryVarResolver(Gson gson)
     {
         this.specs = loadSpecs(gson);
