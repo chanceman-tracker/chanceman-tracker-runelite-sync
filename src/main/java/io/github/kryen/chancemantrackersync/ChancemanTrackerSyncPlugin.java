@@ -20,12 +20,13 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.LinkBrowser;
 
 @Slf4j
 @PluginDescriptor(
     name = "Chanceman Tracker Sync",
-    description = "Copies a tracker blob for chanceman-tracker.github.io",
-    tags = {"chanceman", "tracker", "sync", "clipboard"}
+    description = "Exports tracker data and can open chanceman-tracker.github.io via a temporary localhost bridge",
+    tags = {"chanceman", "tracker", "sync", "clipboard", "upload"}
 )
 public class ChancemanTrackerSyncPlugin extends Plugin
 {
@@ -39,6 +40,9 @@ public class ChancemanTrackerSyncPlugin extends Plugin
 
     @Inject
     private TrackerBlobExporter exporter;
+
+    @Inject
+    private TrackerDirectUploadService directUploadService;
 
     private Gson prettyGson;
 
@@ -83,6 +87,7 @@ public class ChancemanTrackerSyncPlugin extends Plugin
     @Override
     protected void shutDown()
     {
+        directUploadService.stop();
         if (navigationButton != null)
         {
             clientToolbar.removeNavigation(navigationButton);
@@ -146,6 +151,52 @@ public class ChancemanTrackerSyncPlugin extends Plugin
                     if (panel != null)
                     {
                         panel.setError(ex.getMessage() != null ? ex.getMessage() : "Failed to export tracker blob.");
+                    }
+                });
+            }
+        });
+    }
+
+    void openTrackerWithData()
+    {
+        if (panel != null)
+        {
+            panel.setBusy("Preparing tracker upload...");
+        }
+
+        clientThread.invoke(() ->
+        {
+            try
+            {
+                TrackerBlobExporter.ExportResult exportResult = exporter.export(
+                    client,
+                    config.hunterRumoursCompleted()
+                );
+                String compactJson = gson.toJson(exportResult.blob);
+                String previewJson = prettyGson.toJson(exportResult.blob);
+                TrackerDirectUploadService.DirectUploadResult uploadResult =
+                    directUploadService.buildUrl(exportResult.blob.player.name, compactJson);
+
+                SwingUtilities.invokeLater(() ->
+                {
+                    LinkBrowser.browse(uploadResult.url);
+                    if (panel != null)
+                    {
+                        panel.setResult(
+                            "Opened tracker with synced data.",
+                            uploadResult.summary + System.lineSeparator() + System.lineSeparator() + previewJson
+                        );
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                log.warn("Failed to prepare direct tracker upload", ex);
+                SwingUtilities.invokeLater(() ->
+                {
+                    if (panel != null)
+                    {
+                        panel.setError(ex.getMessage() != null ? ex.getMessage() : "Failed to prepare direct tracker upload.");
                     }
                 });
             }
